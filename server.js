@@ -5,7 +5,13 @@ const crypto = require('crypto');
 
 // ── Database Setup (sql.js — pure JS, no native compilation) ──
 let db;
-const DB_PATH = path.join(__dirname, 'data', 'antformail.db');
+const DB_DIR = path.join(__dirname, 'data');
+const DB_PATH = path.join(DB_DIR, 'antformail.db');
+
+// Ensure data directory exists
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
 const INIT_SQL = `
   CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
