@@ -1,0 +1,19 @@
+{
+  "name": "antformail",
+  "version": "1.0.0",
+  "description": "Self-hosted email forwarding micro-SaaS. Centralize contact form submissions from all your web projects.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.21.0",
+    "nodemailer": "^6.9.14",
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

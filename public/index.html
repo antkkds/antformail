@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AntForMail — Email Forwarding Dashboard</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #070b14; color: #e0e6ed; line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+a { color: #59c2ff; text-decoration: none; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; width: 100%; }
+
+/* Setup Page */
+.setup-page { max-width: 500px; margin: 4rem auto; text-align: center; }
+.setup-page h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+.setup-page p { color: #6b7280; margin-bottom: 2rem; }
+.setup-page .features { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 2rem 0; text-align: left; }
+.setup-page .feature { padding: 1rem; border: 1px solid #1a3050; border-radius: 8px; background: #0f1a2e; }
+.setup-page .feature h3 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+.setup-page .feature p { font-size: 0.8rem; margin: 0; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #0a1628, #0f1f3a); border-bottom: 1px solid #1a3050; padding: 0.75rem 0; }
+.header .container { display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 1.2rem; font-weight: 700; color: #fff; }
+.logo span { color: #59c2ff; }
+.nav { display: flex; gap: 1.5rem; align-items: center; }
+.nav a { color: #9ca3af; font-size: 0.85rem; cursor: pointer; transition: color 0.15s; }
+.nav a:hover { color: #fff; }
+.nav .active { color: #59c2ff; font-weight: 600; }
+
+/* Cards */
+.card { background: #0f1a2e; border: 1px solid #1a3050; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+.card-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.card-h h2 { font-size: 1.1rem; font-weight: 600; }
+.card-h h3 { font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.stat { background: linear-gradient(135deg, #0f1a2e, #141f35); border: 1px solid #1a3050; border-radius: 12px; padding: 1.25rem; text-align: center; }
+.stat .val { font-size: 1.75rem; font-weight: 700; }
+.stat .lbl { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 0.25rem; }
+
+/* Forms */
+input, select, textarea { width: 100%; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid #1a3050; background: #070b14; color: #e0e6ed; font-size: 0.85rem; outline: none; }
+input:focus, select:focus { border-color: #59c2ff; }
+.form-group { margin-bottom: 0.75rem; }
+.form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; color: #9ca3af; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.45rem 1rem; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-primary { background: #005f73; color: #fff; }
+.btn-primary:hover { background: #007a94; }
+.btn-danger { background: #7a1f1f; color: #fff; }
+.btn-sm { padding: 0.3rem 0.7rem; font-size: 0.7rem; }
+.btn-outline { background: transparent; border: 1px solid #1a3050; color: #9ca3af; }
+
+/* Table */
+.table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.table th { text-align: left; padding: 0.5rem 0.75rem; color: #6b7280; font-weight: 500; border-bottom: 1px solid #1a3050; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #0a1220; }
+
+/* Messages */
+.msg { background: #0f1a2e; border: 1px solid #1a3050; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+.msg .meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: #6b7280; margin-bottom: 0.3rem; }
+.msg .name { font-weight: 600; margin-bottom: 0.25rem; }
+.msg .text { font-size: 0.85rem; color: #9ca3af; line-height: 1.6; white-space: pre-wrap; }
+
+/* Tags */
+.tag { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 500; }
+.tag-sent { background: #1a8040; color: #7fd962; }
+.tag-pending { background: #7a5a00; color: #f59e0b; }
+.tag-info { background: #00373e; color: #59c2ff; }
+.tag-proj { background: #0f1a2e; border: 1px solid #1a3050; color: #9ca3af; }
+
+/* Key display */
+.key-display { display: flex; align-items: center; gap: 0.5rem; }
+.key-display code { font-size: 0.75rem; background: #070b14; padding: 0.2rem 0.5rem; border-radius: 4px; color: #59c2ff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Integration Guide */
+.integration { background: #070b14; border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 0.75rem; line-height: 1.8; }
+.integration code { color: #59c2ff; }
+
+/* Modal / Toast */
+.toast { position: fixed; top: 1rem; right: 1rem; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.85rem; z-index: 9999; display: none; animation: fadeIn 0.3s; }
+.toast.show { display: block; }
+.toast-success { background: #1a8040; color: #fff; }
+.toast-error { background: #7a1f1f; color: #fff; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Login */
+.login-page { max-width: 380px; margin: 5rem auto; text-align: center; }
+.login-page .card { padding: 2rem; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0.25rem; background: #0a1220; padding: 0.25rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.tab { padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; color: #6b7280; border: none; background: none; transition: all 0.15s; }
+.tab.active { background: #0f1a2e; color: #e0e6ed; font-weight: 500; }
+.tab:hover { color: #e0e6ed; }
+
+@media (max-width: 768px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .nav { gap: 0.75rem; }
+  .nav a { font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('afm_token');
+let projects = [];
+let data = null;
+let currentTab = 'dashboard';
+
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type} show`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: {} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  const resp = await fetch(API + path, opts);
+  return resp.json();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  
+  // Check setup
+  api('GET', '/api/status').then(d => {
+    if (!d.setup_done) { renderSetup(); return; }
+    if (!token) { renderLogin(); return; }
+    loadDashboard();
+  });
+}
+
+// ── Setup Page ──
+function renderSetup() {
+  document.getElementById('app').innerHTML = `
+    <div class="container setup-page">
+      <h1>📬 <span style="color:#59c2ff;">Ant</span>ForMail</h1>
+      <p>Self-hosted email forwarding. One API for all your projects. You control everything.</p>
+      <div class="features">
+        <div class="feature"><h3>🔗 Multiple Projects</h3><p>Each project gets its own API key. Different forwarding emails.</p></div>
+        <div class="feature"><h3>📊 Central Dashboard</h3><p>All submissions from all projects in one place.</p></div>
+        <div class="feature"><h3>🔐 You Own It</h3><p>Runs on your server. No third-party dependencies. No monthly fees.</p></div>
+      </div>
+      <div class="card" style="text-align:left;">
+        <h3 style="margin-bottom:1rem;color:#9ca3af;">⚡ Quick Setup</h3>
+        <div class="form-group"><label>Instance Name</label><input id="s-name" value="AntForMail" placeholder="Your service name"></div>
+        <div class="form-group"><label>Admin Password</label><input id="s-pass" type="password" placeholder="At least 6 characters"></div>
+        <div class="form-group"><label>Admin Email (optional, for SMTP)</label><input id="s-email" type="email" placeholder="you@example.com"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem;" onclick="doSetup()">🚀 Complete Setup</button>
+      </div>
+      <p style="margin-top:0.75rem;font-size:0.75rem;color:#6b7280;">All data stored locally in SQLite. You can configure SMTP later.</p>
+    </div>`;
+}
+
+async function doSetup() {
+  const d = await api('POST', '/api/setup', {
+    instance_name: document.getElementById('s-name').value,
+    password: document.getElementById('s-pass').value,
+    admin_email: document.getElementById('s-email').value,
+  });
+  if (d.ok) { token = d.token; localStorage.setItem('afm_token', token); loadDashboard(); }
+  else showToast(d.error || 'Setup failed', 'error');
+}
+
+// ── Login Page ──
+function renderLogin(msg) {
+  document.getElementById('app').innerHTML = `
+    <div class="container login-page">
+      <div class="card">
+        <h2 style="margin-bottom:0.5rem;">📬 AntForMail</h2>
+        <p style="color:#6b7280;font-size:0.85rem;margin-bottom:1.5rem;">Sign in to your dashboard</p>
+        <div class="form-group"><input id="l-pass" type="password" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Sign In</button>
+        ${msg ? `<p style="color:#f26d78;font-size:0.8rem;margin-top:0.75rem;">${msg}</p>` : ''}
+      </div>
+    </div>`;
+}
+
+async function doLogin() {
+  const d = await api('POST', '/api/login', { password: document.getElementById('l-pass').value });
+  if (d.ok) { token = d.token; localStorage.setItem('afm_token', token); loadDashboard(); }
+  else renderLogin('Wrong password');
+}
+
+// ── Logout ──
+function doLogout() { token = null; localStorage.removeItem('afm_token'); renderLogin(); }
+
+// ── Dashboard ──
+async function loadDashboard() {
+  const d = await api('GET', '/api/data');
+  if (!d.ok) { doLogout(); return; }
+  data = d;
+  projects = d.projects;
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const app = document.getElementById('app');
+  const d = data;
+  
+  app.innerHTML = `
+    <div class="header">
+      <div class="container">
+        <div class="logo">📬 <span>Ant</span>ForMail <span style="font-size:0.65rem;color:#6b7280;font-weight:400;">v${d.version}</span></div>
+        <div class="nav">
+          <a class="active" onclick="switchTab('dashboard')">Dashboard</a>
+          <a onclick="switchTab('projects')">Projects</a>
+          <a onclick="switchTab('settings')">Settings</a>
+          <a onclick="doLogout()">Logout</a>
+        </div>
+      </div>
+    </div>
+    <div class="container" style="margin-top:1.5rem;flex:1;">
+      <div id="tab-content"></div>
+    </div>
+    <div style="text-align:center;padding:1rem;color:#6b7280;font-size:0.7rem;border-top:1px solid #0a1220;">
+      AntForMail v1.0 — Self-hosted email forwarding micro-SaaS
+    </div>`;
+  
+  switchTab(currentTab);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.nav a').forEach(a => {
+    if (a.textContent.toLowerCase().includes(tab)) a.classList.add('active');
+  });
+  
+  if (tab === 'dashboard') renderTabDashboard();
+  else if (tab === 'projects') renderTabProjects();
+  else if (tab === 'settings') renderTabSettings();
+}
+
+// ── Tab: Dashboard ──
+function renderTabDashboard() {
+  const d = data;
+  const subs = d.submissions || [];
+  const tab = document.getElementById('tab-content');
+  
+  tab.innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="val">${d.stats.total_submissions}</div><div class="lbl">Total Submissions</div></div>
+      <div class="stat"><div class="val" style="color:#7fd962">${d.stats.forwarded}</div><div class="lbl">Forwarded</div></div>
+      <div class="stat"><div class="val" style="color:#f59e0b">${d.stats.pending}</div><div class="lbl">Pending</div></div>
+      <div class="stat"><div class="val">${d.stats.total_projects}</div><div class="lbl">Projects</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h">
+        <h2>📩 Recent Submissions</h2>
+        <div><select id="filter-proj" onchange="filterSubmissions()" class="btn btn-outline btn-sm" style="width:auto;padding:0.3rem 0.7rem;">
+          <option value="">All Projects</option>
+          ${projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+        </select></div>
+      </div>
+      <div id="subs-list">${renderSubmissions(subs)}</div>
+    </div>`;
+}
+
+function renderSubmissions(subs) {
+  if (!subs.length) return '<p style="color:#6b7280;text-align:center;padding:2rem;">No submissions yet. Start by integrating a website.</p>';
+  const filter = document.getElementById('filter-proj')?.value || '';
+  const filtered = filter ? subs.filter(s => s.project_id === filter) : subs;
+  
+  return filtered.map(s => `
+    <div class="msg">
+      <div class="meta">
+        <span class="tag tag-proj">${s.project_name || 'Unknown'}</span>
+        <span>${new Date(s.created_at).toLocaleString()}</span>
+        <span class="tag ${s.forwarded ? 'tag-sent' : 'tag-pending'}">${s.forwarded ? '✓ Forwarded' : '⏳ Pending'}</span>
+      </div>
+      <div class="name">${s.name} &lt;${s.email}&gt;${s.phone ? ' · ' + s.phone : ''}</div>
+      <div class="text">${s.message}</div>
+    </div>
+  `).join('');
+}
+
+function filterSubmissions() {
+  api('GET', '/api/data').then(d => {
+    data = d;
+    renderTabDashboard();
+  });
+}
+
+// ── Tab: Projects ──
+function renderTabProjects() {
+  const tab = document.getElementById('tab-content');
+  
+  tab.innerHTML = `
+    <div class="card">
+      <div class="card-h">
+        <h2>🔗 Projects</h2>
+        <button class="btn btn-primary btn-sm" onclick="showAddProject()">+ Add Project</button>
+      </div>
+      ${projects.length === 0 ? '<p style="color:#6b7280;text-align:center;padding:2rem;">No projects yet. Add your first project.</p>' : `
+      <table class="table">
+        <thead><tr><th>Project</th><th>Forward To</th><th>API Key</th><th></th></tr></thead>
+        <tbody>${projects.map(p => `
+          <tr>
+            <td><strong>${p.name}</strong> ${!p.active ? '<span class="tag tag-pending">Inactive</span>' : ''}</td>
+            <td>${p.forward_email}</td>
+            <td>
+              <div class="key-display">
+                <code>${p.api_key.substring(0, 16)}...</code>
+                <button class="btn btn-outline btn-sm" onclick="copyKey('${p.api_key}')">Copy</button>
+              </div>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
+            </td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`}
+    </div>
+    
+    <!-- Integration Guide -->
+    <div class="card">
+      <div class="card-h"><h2>🔌 Integration Guide</h2></div>
+      <p style="font-size:0.85rem;color:#9ca3af;margin-bottom:0.75rem;">Add this to any website's contact form:</p>
+      <div class="integration">
+<code>fetch('https://YOUR-SERVER.com/api/submit', {<br>
+&nbsp;&nbsp;method: 'POST',<br>
+&nbsp;&nbsp;headers: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'Content-Type': 'application/json',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'X-API-Key': '<span id="demo-key">YOUR_API_KEY</span>'<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;body: JSON.stringify({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name: form.name,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;email: form.email,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;message: form.message,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;phone: form.phone<br>
+&nbsp;&nbsp;})<br>
+});</code>
+      </div>
+      <p style="font-size:0.75rem;color:#6b7280;margin-top:0.75rem;">⚠️ If a project's API key is compromised, regenerate it from the projects list.</p>
+    </div>`;
+}
+
+async function showAddProject() {
+  const name = prompt('Project name (e.g. "Tem Tem Sabah Website"):');
+  if (!name) return;
+  const email = prompt('Forward email (e.g. "info@temtemsabah.com"):');
+  if (!email) return;
+  const url = prompt('Website URL (optional):', 'https://');
+  
+  const d = await api('POST', '/api/projects', { name, forward_email: email, website_url: url || '' });
+  if (d.ok) {
+    projects.push(d.project);
+    renderTabProjects();
+    showToast(`✅ "${name}" created!`);
+  } else showToast(d.error || 'Failed', 'error');
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project and all its submissions?')) return;
+  await api('DELETE', `/api/projects/${id}`);
+  projects = projects.filter(p => p.id !== id);
+  renderTabProjects();
+  showToast('🗑️ Project deleted');
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key);
+  showToast('📋 API key copied!');
+}
+
+// ── Tab: Settings ──
+function renderTabSettings() {
+  const tab = document.getElementById('tab-content');
+  const c = data.config;
+  
+  tab.innerHTML = `
+    <div class="card" style="max-width:500px;margin:0 auto;">
+      <div class="card-h"><h2>⚙️ Settings</h2></div>
+      <div class="form-group"><label>Instance Name</label><input id="set-name" value="${c.instance_name || ''}"></div>
+      <div class="form-group"><label>Admin Email</label><input id="set-email" value="${c.admin_email || ''}" placeholder="used as From address"></div>
+      <div class="form-group"><label>SMTP Host (optional — for reliable email delivery)</label><input id="set-smtp-host" placeholder="smtp.gmail.com"></div>
+      <div class="form-row">
+        <div class="form-group"><label>SMTP Port</label><input id="set-smtp-port" value="587" placeholder="587"></div>
+        <div class="form-group"><label>SMTP User</label><input id="set-smtp-user" placeholder="you@gmail.com"></div>
+      </div>
+      <div class="form-group"><label>SMTP Password</label><input id="set-smtp-pass" type="password" placeholder="App password or API key"></div>
+      <div class="form-group"><label>Change Password</label><input id="set-new-pass" type="password" placeholder="Leave empty to keep current"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem;" onclick="saveSettings()">💾 Save Settings</button>
+      <p id="settings-msg" style="margin-top:0.75rem;font-size:0.8rem;"></p>
+      
+      <hr style="border:0;border-top:1px solid #1a3050;margin:1.5rem 0;">
+      <h3 style="font-size:0.8rem;color:#6b7280;margin-bottom:0.5rem;">📋 Service Info</h3>
+      <p style="font-size:0.8rem;color:#6b7280;">
+        Version: 1.0.0<br>
+        Database: SQLite (local)<br>
+        Total Projects: ${projects.length}<br>
+        Total Submissions: ${data.stats.total_submissions}
+      </p>
+    </div>`;
+}
+
+async function saveSettings() {
+  const body = {
+    instance_name: document.getElementById('set-name').value,
+    admin_email: document.getElementById('set-email').value,
+    smtp_host: document.getElementById('set-smtp-host').value,
+    smtp_port: document.getElementById('set-smtp-port').value,
+    smtp_user: document.getElementById('set-smtp-user').value,
+    smtp_pass: document.getElementById('set-smtp-pass').value,
+  };
+  const newPass = document.getElementById('set-new-pass').value;
+  if (newPass) body.new_password = newPass;
+  
+  const d = await api('POST', '/api/config', body);
+  document.getElementById('settings-msg').textContent = d.ok ? '✅ Saved!' : '❌ Error';
+  document.getElementById('settings-msg').style.color = d.ok ? '#7fd962' : '#f26d78';
+  if (d.ok) showToast('✅ Settings saved!');
+}
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>
