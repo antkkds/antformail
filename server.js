@@ -12,6 +12,21 @@ const DB_PATH = path.join(DB_DIR, 'antformail.db');
 if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
+
+// If there's an existing DB but it might be corrupt from previous failed deployment
+if (fs.existsSync(DB_PATH)) {
+  try {
+    const testBuffer = fs.readFileSync(DB_PATH);
+    // Check if it's a valid SQLite database (starts with SQLite format header)
+    if (testBuffer.length < 100 || !testBuffer.toString('utf-8', 0, 16).includes('SQLite')) {
+      console.log('⚠️ Existing database is corrupt or not valid SQLite. Resetting...');
+      fs.unlinkSync(DB_PATH);
+    }
+  } catch (e) {
+    console.log('⚠️ Cannot read existing database. Resetting...');
+    fs.unlinkSync(DB_PATH);
+  }
+}
 const INIT_SQL = `
   CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
