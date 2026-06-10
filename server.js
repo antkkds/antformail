@@ -5,6 +5,7 @@ const crypto = require('crypto');
 
 // ── Database Setup (sql.js — pure JS, no native compilation) ──
 let db;
+let dbRaw; // Reference to the raw SQL.Database instance
 const DB_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DB_DIR, 'antformail.db');
 
@@ -72,9 +73,14 @@ function initDb() {
 }
 
 function saveDb() {
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
+  if (!dbRaw) return;
+  try {
+    const data = dbRaw.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(DB_PATH, buffer);
+  } catch (e) {
+    console.error('Failed to save database:', e.message);
+  }
 }
 
 // Wrap sql.js to have synchronous API like better-sqlite3
@@ -112,6 +118,7 @@ try {
   
   initSqlJs({ locateFile: () => wasmPath }).then((SQL) => {
     const rawDb = sqlBuffer ? new SQL.Database(sqlBuffer) : new SQL.Database();
+    dbRaw = rawDb; // Store reference for saveDb()
     
     // Run initialization
     rawDb.run(INIT_SQL);
@@ -163,7 +170,7 @@ try {
     // Auto-save periodically
     setInterval(() => {
       try {
-        fs.writeFileSync(DB_PATH, Buffer.from(rawDb.export()));
+        fs.writeFileSync(DB_PATH, Buffer.from(dbRaw.export()));
       } catch(e) {}
     }, 5000);
     
